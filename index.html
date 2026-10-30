@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a1f1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="Verdant Echoes — a pocket monster adventure for phone and tablet. Touch controls, optional tilt steering, and a hand-crafted valley to explore." />
+  <title>Verdant Echoes — Pocket Monster Adventure</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="game" aria-label="Verdant Echoes game world"></canvas>
+    <div id="vignette" aria-hidden="true"></div>
+
+    <header id="hud" class="hidden">
+      <div class="hud-left">
+        <div id="location-chip" class="glass-chip">
+          <span class="chip-dot"></span>
+          <span id="location-name">Lumen Vale</span>
+        </div>
+        <div id="quest-chip" class="glass-chip quest">
+          <span class="quest-mark"></span>
+          <span id="quest-text">Meet Professor Maple</span>
+        </div>
+      </div>
+      <div class="hud-right">
+        <button id="btn-tilt" class="icon-pill" aria-label="Toggle tilt controls" title="Tilt controls">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.8h10a2 2 0 0 1 2 2v12.4a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5.8a2 2 0 0 1 2-2Z"/><path d="M9.5 7.5h5"/><path d="M12 16.5v.01"/></svg>
+          <span class="pill-label">Tilt</span>
+        </button>
+        <button id="btn-menu" class="icon-pill" aria-label="Open adventure journal" title="Menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5h15"/><path d="M4.5 12h15"/><path d="M4.5 17.5h15"/></svg>
+          <span class="pill-label">Menu</span>
+        </button>
+      </div>
+    </header>
+
+    <div id="controls" class="hidden" aria-hidden="true">
+      <div id="joystick" role="presentation">
+        <div class="joystick-ring"></div>
+        <div class="joystick-cross"></div>
+        <div id="joystick-thumb"></div>
+        <span class="joystick-label">MOVE</span>
+      </div>
+      <div id="action-buttons">
+        <button id="btn-b" class="round-btn b" aria-label="Open menu"><span class="key">B</span><span class="cap">Menu</span></button>
+        <button id="btn-a" class="round-btn a" aria-label="Interact"><span class="key">A</span><span class="cap">Action</span></button>
+      </div>
+    </div>
+
+    <div id="title-screen" class="overlay title-overlay">
+      <div class="title-glow" aria-hidden="true"></div>
+      <div class="title-content">
+        <div class="eyebrow"><span></span>A POCKET MONSTER ADVENTURE<span></span></div>
+        <h1 class="logo">
+          <span class="logo-top">VERDANT</span>
+          <span class="logo-bottom">ECHOES</span>
+        </h1>
+        <p class="title-tagline">The valley is humming. Something ancient is waking.</p>
+        <div class="title-actions">
+          <button id="btn-new" class="btn primary">New Adventure</button>
+          <button id="btn-continue" class="btn ghost hidden">Continue Journey</button>
+          <button id="btn-title-settings" class="btn text">Settings</button>
+        </div>
+        <div class="title-foot">
+          <span class="foot-item"><span class="foot-icon tilt"></span>Optional tilt steering</span>
+          <span class="foot-item"><span class="foot-icon touch"></span>Built for touch</span>
+          <span class="foot-item"><span class="foot-icon save"></span>Auto-saves locally</span>
+        </div>
+      </div>
+      <div class="title-version">v1.0 · Lumen Vale</div>
+    </div>
+
+    <div id="dialog" class="overlay dialog-overlay hidden" role="dialog" aria-modal="true">
+      <div class="dialog-panel">
+        <div class="dialog-portrait">
+          <canvas id="dialog-portrait-canvas" width="180" height="180"></canvas>
+        </div>
+        <div class="dialog-body">
+          <div id="dialog-name" class="dialog-name">Professor Maple</div>
+          <p id="dialog-text" class="dialog-text"></p>
+          <div id="dialog-choices" class="dialog-choices hidden"></div>
+          <button id="dialog-next" class="dialog-next" aria-label="Continue dialog">
+            <span>Continue</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="starter" class="overlay starter-overlay hidden" role="dialog" aria-modal="true">
+      <div class="starter-panel">
+        <div class="starter-head">
+          <div class="eyebrow small"><span></span>CHOOSE A PARTNER<span></span></div>
+          <h2>Who will walk beside you?</h2>
+          <p>Each pocketling carries a spark of the valley's old magic.</p>
+        </div>
+        <div id="starter-cards" class="starter-cards"></div>
+        <div class="starter-foot">
+          <p id="starter-note">Tap a card to inspect it.</p>
+          <button id="btn-choose-starter" class="btn primary" disabled>Choose Partner</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="battle-ui" class="overlay battle-overlay hidden" aria-live="polite">
+      <div class="battle-cards">
+        <div id="enemy-card" class="battle-card enemy-card">
+          <div class="battle-card-head">
+            <span id="enemy-name" class="battle-name">Emberkit</span>
+            <span id="enemy-level" class="battle-level">Lv. 5</span>
+          </div>
+          <div class="type-row" id="enemy-types"></div>
+          <div class="hp-track"><div id="enemy-hp" class="hp-fill"></div></div>
+          <div class="hp-numbers"><span>HP</span><span id="enemy-hp-text">-- / --</span></div>
+        </div>
+        <div id="ally-card" class="battle-card ally-card">
+          <div class="battle-card-head">
+            <span id="ally-name" class="battle-name">Sproutle</span>
+            <span id="ally-level" class="battle-level">Lv. 5</span>
+          </div>
+          <div class="type-row" id="ally-types"></div>
+          <div class="hp-track"><div id="ally-hp" class="hp-fill"></div></div>
+          <div class="hp-numbers"><span>HP</span><span id="ally-hp-text">-- / --</span></div>
+          <div class="xp-track"><div id="ally-xp" class="xp-fill"></div></div>
+        </div>
+      </div>
+      <div class="battle-bottom">
+        <div id="battle-message" class="battle-message">A wild pocketling appears!</div>
+        <div id="battle-actions" class="battle-actions">
+          <div id="move-grid" class="move-grid"></div>
+          <div id="battle-tabs" class="battle-tabs">
+            <button class="battle-tab active" data-tab="moves">Moves</button>
+            <button class="battle-tab" data-tab="bag">Bag</button>
+            <button class="battle-tab" data-tab="party">Party</button>
+            <button class="battle-tab" data-tab="run">Run</button>
+          </div>
+          <div id="battle-submenu" class="battle-submenu hidden"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="menu" class="overlay menu-overlay hidden" role="dialog" aria-modal="true">
+      <div class="menu-panel">
+        <div class="menu-head">
+          <div>
+            <div class="eyebrow small"><span></span>ADVENTURE JOURNAL<span></span></div>
+            <h2>Lumen Vale</h2>
+          </div>
+          <button id="btn-close-menu" class="icon-close" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12"/><path d="m18 6-12 12"/></svg>
+          </button>
+        </div>
+        <div class="menu-tabs" role="tablist">
+          <button class="menu-tab active" data-menu-tab="party">Party</button>
+          <button class="menu-tab" data-menu-tab="bag">Bag</button>
+          <button class="menu-tab" data-menu-tab="notes">Field Notes</button>
+          <button class="menu-tab" data-menu-tab="quest">Quest</button>
+          <button class="menu-tab" data-menu-tab="settings">Settings</button>
+        </div>
+        <div id="menu-content" class="menu-content"></div>
+      </div>
+    </div>
+
+    <div id="settings" class="overlay menu-overlay hidden" role="dialog" aria-modal="true">
+      <div class="menu-panel settings-panel">
+        <div class="menu-head">
+          <div>
+            <div class="eyebrow small"><span></span>OPTIONS<span></span></div>
+            <h2>Settings</h2>
+          </div>
+          <button id="btn-close-settings" class="icon-close" aria-label="Close settings">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12"/><path d="m18 6-12 12"/></svg>
+          </button>
+        </div>
+        <div id="settings-content" class="menu-content"></div>
+      </div>
+    </div>
+
+    <div id="credits" class="overlay credits-overlay hidden" role="dialog" aria-modal="true">
+      <div class="credits-panel">
+        <div class="credits-rays" aria-hidden="true"></div>
+        <div class="eyebrow small"><span></span>QUEST COMPLETE<span></span></div>
+        <h2>The Verdant Echo</h2>
+        <p id="credits-text">The valley's song settles into a warm, steady hum. Professor Maple believes this is only the beginning.</p>
+        <div id="credits-stats" class="credits-stats"></div>
+        <button id="btn-credits-continue" class="btn primary">Keep Exploring</button>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden" role="status"></div>
+    <div id="transition" class="transition" aria-hidden="true"></div>
+    <div id="orientation-hint" class="orientation-hint hidden">Turn your device sideways for a wider view</div>
+  </div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
